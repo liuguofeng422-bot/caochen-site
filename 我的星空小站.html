@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>我的星空小站</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='46' fill='%23232754'/%3E%3Cpath d='M50 18l7.5 18.3 19.5 2-14.5 13.4 4.2 19.3L50 62.3 33.3 71l4.2-19.3L23 38.3l19.5-2z' fill='%23f6d98b'/%3E%3C/svg%3E">
+<!-- 字体：标题用衬线体，正文用无衬线体（走自托管镜像） -->
+<link rel="stylesheet" href="https://miaoda.feishu.cn/fonts/css2?family=Noto+Serif+SC:wght@500;700;900&family=Noto+Sans+SC:wght@400;500;700&display=swap">
+<style>
+/* ============================================================
+   我的星空小站 —— 一个纯 CSS 的个人小站
+   结构说明：
+   1. 夜空背景（固定层）：渐变夜空 + 星点 + 弯月 + 飘动的云
+   2. 内容层：奶油色"纸片"卡片，左文右图 / 上图下文自适应
+   3. 底部：邀请语 + 版权
+   修改颜色：直接改下面 :root 里的变量即可
+   ============================================================ */
+
+/* ---------- 颜色与字体变量（改这里换主题色） ---------- */
+:root {
+  --sky-top: #232754;        /* 夜空顶部（深靛蓝） */
+  --sky-mid: #6559a8;        /* 夜空中部（薰衣草紫） */
+  --sky-low: #e7b8b4;        /* 夜空底部（晚霞粉） */
+  --sky-bottom: #ffe9d6;     /* 地平线暖光 */
+
+  --card: #fff9ee;           /* 卡片纸色 */
+  --card-edge: #f3e6d0;      /* 卡片描边 */
+  --ink: #3b3a55;            /* 正文墨色 */
+  --ink-soft: #7b7a96;       /* 次要文字 */
+  --cream: #fff7ea;          /* 夜空上的浅色文字 */
+
+  --coral: #ee7a5a;          /* 强调：珊瑚 */
+  --gold: #e0a83c;           /* 强调：金 */
+  --mint: #57b39b;           /* 强调：薄荷 */
+  --plum: #7a6bb0;           /* 强调：星空紫 */
+  --moon: #f6d98b;           /* 月亮黄 */
+
+  --serif: 'Noto Serif SC', 'Songti SC', 'SimSun', serif;
+  --sans: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  font-family: var(--sans);
+  color: var(--ink);
+  line-height: 1.9;
+  /* 整页渐变夜空：从深蓝渐变到暖橙色地平线 */
+  background: linear-gradient(180deg,
+    var(--sky-top) 0%,
+    #3d417c 26%,
+    var(--sky-mid) 48%,
+    #9a80c0 66%,
+    var(--sky-low) 84%,
+    var(--sky-bottom) 100%);
+  min-height: 100vh;
+}
+
+/* 键盘焦点可见（无障碍） */
+:focus-visible {
+  outline: 3px solid var(--gold);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* ============================================================
+   夜空固定背景层（不随页面滚动）
+   ============================================================ */
+.sky {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* 小星点：用多组 radial-gradient 一次铺好，位置可自行调整 */
+.starfield {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(1.5px 1.5px at 12% 18%, rgba(255,255,255,.9), transparent 60%),
+    radial-gradient(2px 2px   at 28% 8%,  rgba(255,255,255,.7), transparent 60%),
+    radial-gradient(1.5px 1.5px at 42% 24%, rgba(255,255,255,.8), transparent 60%),
+    radial-gradient(2px 2px   at 55% 12%, rgba(255,240,200,.9), transparent 60%),
+    radial-gradient(1.5px 1.5px at 68% 28%, rgba(255,255,255,.6), transparent 60%),
+    radial-gradient(2px 2px   at 80% 16%, rgba(255,255,255,.85), transparent 60%),
+    radial-gradient(1.5px 1.5px at 90% 32%, rgba(255,240,200,.8), transparent 60%),
+    radial-gradient(2px 2px   at 8% 44%,  rgba(255,255,255,.7), transparent 60%),
+    radial-gradient(1.5px 1.5px at 35% 48%, rgba(255,255,255,.55), transparent 60%),
+    radial-gradient(2px 2px   at 62% 46%, rgba(255,255,255,.75), transparent 60%),
+    radial-gradient(1.5px 1.5px at 84% 54%, rgba(255,255,255,.6), transparent 60%),
+    radial-gradient(2px 2px   at 22% 62%, rgba(255,240,200,.6), transparent 60%);
+}
+
+/* 大一点的星：一闪一闪 */
+.sparkle {
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  color: rgba(255,255,255,.92);
+  animation: twinkle 3s ease-in-out infinite;
+}
+.sparkle-1 { top: 12%; left: 16%; }
+.sparkle-2 { top: 21%; right: 22%; animation-delay: .9s; width: 20px; height: 20px; }
+.sparkle-3 { top: 30%; left: 33%; animation-delay: 1.7s; width: 16px; height: 16px; }
+
+@keyframes twinkle {
+  0%, 100% { opacity: .25; transform: scale(.8); }
+  50%      { opacity: 1;   transform: scale(1.08); }
+}
+
+/* 月亮（右上角） */
+.moon {
+  position: absolute;
+  top: 6vh;
+  right: 8vw;
+  width: 96px;
+  filter: drop-shadow(0 0 22px rgba(246,217,139,.5));
+}
+
+/* 飘动的云 */
+.cloud { position: absolute; opacity: .5; }
+.cloud-1 { top: 15%; left: -20%; width: 250px; animation: drift 56s linear infinite; }
+.cloud-2 { top: 33%; right: -20%; width: 320px; opacity: .36; animation: drift-back 70s linear infinite; }
+
+@keyframes drift {
+  from { transform: translateX(0); }
+  to   { transform: translateX(150vw); }
+}
+@keyframes drift-back {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-150vw); }
+}
+
+/* ============================================================
+   内容层
+   ============================================================ */
+.page {
+  position: relative;
+  z-index: 1;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 56px 22px 72px;
+}
+
+/* ---------- 页首标题 ---------- */
+.hero {
+  text-align: center;
+  color: var(--cream);
+  padding: 10px 0 44px;
+}
+.hero h1 {
+  font-family: var(--serif);
+  font-weight: 900;
+  font-size: clamp(1.9rem, 5vw, 2.7rem);
+  letter-spacing: 4px;
+  margin: 0 0 12px;
+  text-shadow: 0 2px 18px rgba(20,24,66,.5);
+}
+.hero h1 .sp {
+  width: 26px;
+  height: 26px;
+  margin: 0 12px;
+  vertical-align: -3px;
+}
+.hero .subtitle {
+  margin: 0;
+  font-size: .95rem;
+  letter-spacing: 3px;
+  opacity: .88;
+}
+
+/* ---------- 卡片（奶油纸片） ---------- */
+.card {
+  background: var(--card);
+  border: 1px solid var(--card-edge);
+  border-radius: 26px;
+  padding: 34px 36px 38px;
+  margin: 0 0 36px;
+  box-shadow: 0 22px 44px rgba(24,20,60,.28), inset 0 1px 0 rgba(255,255,255,.8);
+  transition: transform .35s ease, box-shadow .35s ease;
+}
+@media (hover: hover) {
+  .card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 30px 56px rgba(24,20,60,.34), inset 0 1px 0 rgba(255,255,255,.8);
+  }
+}
+
+/* 卡片标题：中间文字 + 两侧小星 */
+.card-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 0 0 6px;
+  font-family: var(--serif);
+  font-size: 1.55rem;
+  font-weight: 700;
+  letter-spacing: 3px;
+  color: var(--ink);
+}
+.card-title .sp {
+  width: 20px;
+  height: 20px;
+  color: var(--gold);
+}
+
+/* 文案 + 插图的双栏，默认左文右图 */
+.card-grid {
+  display: grid;
+  grid-template-columns: 1fr 236px;
+  gap: 30px;
+  align-items: center;
+  margin-top: 22px;
+}
+/* 给带 .flip 的卡片换成左图右文 */
+.card-grid.flip .card-figure { order: -1; }
+
+.card-text p { margin: 0; font-size: 1rem; }
+
+.card-figure { margin: 0; }
+.card-figure img {
+  width: 100%;
+  height: auto;
+  border-radius: 18px;
+  box-shadow: 0 12px 26px rgba(24,20,60,.22);
+  transform: rotate(-2deg);
+  transition: transform .35s ease;
+}
+@media (hover: hover) {
+  .card:hover .card-figure img { transform: rotate(0deg); }
+}
+
+/* 引言（阅读日常 / 歌单 的加粗一句） */
+.quote {
+  font-family: var(--serif);
+  text-align: center;
+  color: var(--plum);
+  font-size: 1.06rem;
+  margin: 18px 0 0;
+}
+.quote::before { content: "“"; color: var(--coral); font-size: 1.5rem; }
+.quote::after  { content: "”"; color: var(--coral); font-size: 1.5rem; }
+
+/* ---------- 小爱好：四宫格 ---------- */
+.hobby-grid {
+  list-style: none;
+  margin: 24px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.hobby {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: rgba(255,255,255,.72);
+  border: 1px solid #f3e6d0;
+  border-radius: 18px;
+  padding: 14px 16px;
+}
+.hobby-badge {
+  flex: none;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+}
+.hobby-badge svg { width: 26px; height: 26px; }
+.badge-coral { background: #fdebe3; color: var(--coral); }
+.badge-gold  { background: #fdf3dc; color: var(--gold); }
+.badge-mint  { background: #e2f3ec; color: var(--mint); }
+.badge-plum  { background: #ece6fa; color: var(--plum); }
+
+.hobby strong { display: block; font-size: 1.02rem; letter-spacing: 1px; }
+.hobby p { margin: 2px 0 0; font-size: .88rem; color: var(--ink-soft); }
+
+/* ---------- 页脚 ---------- */
+.footer {
+  text-align: center;
+  padding-top: 14px;
+  color: #6f5b8f;
+}
+.footer-invite {
+  font-family: var(--serif);
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: 3px;
+  color: #5f4d86;
+  margin: 0;
+}
+.footer-copy {
+  margin: 8px 0 0;
+  font-size: .88rem;
+  opacity: .85;
+}
+.footer-contact {
+  margin: 4px 0 0;
+  font-size: .92rem;
+  letter-spacing: 1px;
+  color: #6f5b8f;
+}
+
+/* ---------- 我喜欢的部分：链接卡片 ---------- */
+.links-note {
+  text-align: center;
+  color: var(--ink-soft);
+  font-size: .9rem;
+  margin: 4px 0 0;
+}
+.link-list {
+  list-style: none;
+  margin: 20px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+.link-list a {
+  display: block;
+  padding: 12px 16px;
+  background: rgba(255,255,255,.72);
+  border: 1px solid #f3e6d0;
+  border-radius: 14px;
+  color: var(--ink);
+  text-decoration: none;
+  font-size: .98rem;
+  transition: background .25s ease, transform .25s ease;
+}
+@media (hover: hover) {
+  .link-list a:hover {
+    background: #fdebe3;
+    color: var(--coral);
+    transform: translateX(4px);
+  }
+}
+
+/* ============================================================
+   响应式：窄屏（手机）时双栏变单栏
+   ============================================================ */
+@media (max-width: 760px) {
+  .page { padding: 44px 16px 60px; }
+  .card { padding: 26px 22px 30px; }
+  .card-grid { grid-template-columns: 1fr; gap: 22px; }
+  .card-grid.flip .card-figure { order: 0; }
+  .card-figure { max-width: 320px; margin: 0 auto; }
+  .moon { width: 74px; }
+}
+
+@media (max-width: 520px) {
+  .hero h1 { font-size: 1.65rem; letter-spacing: 2px; }
+  .hero h1 .sp { width: 20px; height: 20px; margin: 0 6px; }
+  .hobby-grid { grid-template-columns: 1fr; }
+  .card-title { font-size: 1.35rem; }
+}
+
+/* 尊重系统"减少动态效果"设置 */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- ===== 夜空背景（装饰层，不影响阅读） ===== -->
+<div class="sky" aria-hidden="true">
+  <div class="starfield"></div>
+
+  <!-- 大星星 -->
+  <svg class="sparkle sparkle-1" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12 2.4l2.3 7.3 7.3 2.3-7.3 2.3-2.3 7.3-2.3-7.3-7.3-2.3 7.3-2.3z"/>
+  </svg>
+  <svg class="sparkle sparkle-2" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12 2.4l2.3 7.3 7.3 2.3-7.3 2.3-2.3 7.3-2.3-7.3-7.3-2.3 7.3-2.3z"/>
+  </svg>
+  <svg class="sparkle sparkle-3" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12 2.4l2.3 7.3 7.3 2.3-7.3 2.3-2.3 7.3-2.3-7.3-7.3-2.3 7.3-2.3z"/>
+  </svg>
+
+  <!-- 月亮 -->
+  <svg class="moon" viewBox="0 0 120 120" aria-hidden="true">
+    <circle cx="60" cy="60" r="48" fill="#f6d98b"/>
+    <circle cx="44" cy="44" r="9"  fill="#edc76b"/>
+    <circle cx="76" cy="66" r="6"  fill="#edc76b"/>
+    <circle cx="58" cy="82" r="5"  fill="#edc76b"/>
+  </svg>
+
+  <!-- 飘动的云 -->
+  <svg class="cloud cloud-1" viewBox="0 0 200 90" fill="#ffffff" aria-hidden="true">
+    <ellipse cx="60"  cy="60" rx="55" ry="28"/>
+    <ellipse cx="115" cy="48" rx="45" ry="26"/>
+    <ellipse cx="150" cy="64" rx="42" ry="22"/>
+  </svg>
+  <svg class="cloud cloud-2" viewBox="0 0 200 90" fill="#ffffff" aria-hidden="true">
+    <ellipse cx="60"  cy="60" rx="55" ry="28"/>
+    <ellipse cx="115" cy="48" rx="45" ry="26"/>
+    <ellipse cx="150" cy="64" rx="42" ry="22"/>
+  </svg>
+</div>
+
+<!-- ===== 内容层 ===== -->
+<main class="page">
+
+  <!-- 页首 -->
+  <header class="hero">
+    <h1>
+      <svg class="sp" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path d="M12 2.4l2.3 7.3 7.3 2.3-7.3 2.3-2.3 7.3-2.3-7.3-7.3-2.3 7.3-2.3z"/>
+      </svg>
+      欢迎来到草琛的网站
+      <svg class="sp" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path d="M12 2.4l2.3 7.3 7.3 2.3-7.3 2.3-2.3 7.3-2.3-7.3-7.3-2.3 7.3-2.3z"/>
+      </svg>
+    </h1>
+    <p class="subtitle">在闲着没事干的星空下，闲着没事干</p>
+  </header>
+
+  <!-- 关于我 -->
+  <section class="card" id="about" aria-labelledby="about-title">
+    <h2 class="card-title" id="about-title">
+      <svg class="sp" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path d="M12 2.4l2.3 7.3 7.3 2.3-7.3 2.3-2.3 7.3-2.3-7.3-7.3-2.3 7.3-2.3z"/>
+      </svg>
+      关于我
+      <svg class="sp" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path d="M12 2.4l2.3 7.3 7.3 2.3-7.3 2.3-2.3 7.3-2.3-7.3-7.3-2.3 7.3-2.3z"/>
+      </svg>
+    </h2>
+    <div class="card-grid">
+      <div class="card-text">
+        <p>大家好，这里是我的个人网站，我是一个喜欢健身、热爱生活的人，平时喜欢刷刷抖音、听听音乐、打打cs，在自己的小世界里找到属于自己的快乐。这个小站记录了我平时的生活和爱好，欢迎你来逛逛~
+
+        </p>
+      </div>
+      <figure class="card-figure">
+        <img src="./caochen.jpg" alt="草琛的搞怪自拍" loading="lazy">
+      </figure>
+    </div>
+  </section>
+
+  <!-- 我的阅读日常 -->
+  <section class="card" id="reading" aria-labelledby="reading-title">
+    <h2 class="card-title" id="reading-title">
+      <svg class="sp" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path d="M12 2.4l2.3 7.3 7.3 2.3-7.3 2.3-2.3 7.3-2.3-7.3-7.3-2.3 7.3-2.3z"/>
+      </svg>
+      我的自拍日常
+      <svg class="sp" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path d="M12 2.4l2.3 7.3 7.3 2.3-7.3 2.3-2.3 7.3-2.3-7.3-7.3-2.3 7.3-2.3z"/>
+      </svg>
+    </h2>
+    <p class="quote">午后阳光正好，欣赏一下自己的美貌，是最治愈的时光</p>
+    <div class="card-grid flip">
+      <div class="card-text">
+        <p>我喜欢在风和日丽的午后让好朋友给我来一张照片，每一次重逢都有新的感受，每次出游让我看到了更大的世界，也让我学会了和自己相处。如果你也有喜欢的人，欢迎和我交流呀。</p>
+      </div>
+      <figure class="card-figure">
+        <img src="./caochen1.jpg" alt="草琛在户外自拍" loading="lazy">
+      </figure>
+    </div>
+  </section>
+
+  <!-- 我的歌单 -->
+  <section class="card" id="music" aria-labelledby="music-title">
+    <h2 class="card-title" id="music-title">
+      <svg class="sp" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path d="M12 2.4l2.3 7.3 7.3 2.3-7.3 2.3-2.3 7.3-2.3-7.3-7.3-2.3 7.3-2.3z"/>
+      </svg>
+      我的休闲时刻
+      <svg class="sp" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path d="M12 2.4l2.3 7.3 7.3 2.3-7.3 2.3-2.3 7.3-2.3-7.3-7.3-2.3 7.3-2.3z"/>
+      </svg>
+    </h2>
+    <p class="quote">音乐是生活的调味剂，每一首歌都藏着一段回忆</p>
+    <div class="card-grid">
+      <div class="card-text">
+        <p>我喜欢听民谣和轻音乐，写作业的时候放一首纯音乐，效率会高很多。最近很喜欢听民谣乐队的歌，旋律轻轻的，很适合夏天听。</p>
+      </div>
+      <figure class="card-figure">
+        <img src="./caochen2.jpg" alt="草琛戴着粉色牛角发箍" loading="lazy">
+      </figure>
+    </div>
+  </section>
+
+  <!-- 我的小爱好 -->
+  <section class="card" id="hobbies" aria-labelledby="hobbies-title">
+    <h2 class="card-title" id="hobbies-title">
+      <svg class="sp" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path d="M12 2.4l2.3 7.3 7.3 2.3-7.3 2.3-2.3 7.3-2.3-7.3-7.3-2.3 7.3-2.3z"/>
+      </svg>
+      我的小爱好
+      <svg class="sp" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path d="M12 2.4l2.3 7.3 7.3 2.3-7.3 2.3-2.3 7.3-2.3-7.3-7.3-2.3 7.3-2.3z"/>
+      </svg>
+    </h2>
+    <ul class="hobby-grid">
+      <li class="hobby">
+        <span class="hobby-badge badge-coral">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 6.5C9.8 4.9 6.6 4.9 4 6.5v11.6c2.6-1.6 5.8-1.6 8 0V6.5z"/>
+            <path d="M12 6.5c2.2-1.6 5.4-1.6 8 0v11.6c-2.6-1.6-5.8-1.6-8 0V6.5z"/>
+          </svg>
+        </span>
+        <div><strong>看书</strong><p>散文、小说、绘本都喜欢</p></div>
+      </li>
+      <li class="hobby">
+        <span class="hobby-badge badge-gold">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M9 18.2V5.6l10-2v12.2"/>
+            <circle cx="6.5" cy="18.2" r="2.4"/>
+            <circle cx="16.5" cy="16.2" r="2.4"/>
+          </svg>
+        </span>
+        <div><strong>听音乐</strong><p>民谣、轻音乐、韩语歌</p></div>
+      </li>
+      <li class="hobby">
+        <span class="hobby-badge badge-mint">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M6.2 13.8h11.6l1.4 6H4.8z"/>
+            <path d="M5.8 13.6c.4-1.8 2.3-2.4 3.8-1.6.5-1.8 3.1-1.8 3.6 0 .5-1.8 3.1-1.8 3.6 0 1.5-.8 3.4-.2 3.8 1.6"/>
+            <circle cx="12" cy="10.2" r="1.3" fill="currentColor" stroke="none"/>
+          </svg>
+        </span>
+        <div><strong>做甜品</strong><p>偶尔尝试做小蛋糕和饼干</p></div>
+      </li>
+      <li class="hobby">
+        <span class="hobby-badge badge-plum">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="4.6" r="2.1"/>
+            <path d="M12 7.2v4.4"/>
+            <path d="M12 8.6l-3.2 3.6"/>
+            <path d="M12 8.6l3.1 3.4"/>
+            <path d="M8.8 12.2l-1.4 4.2"/>
+            <path d="M15.1 12l1.6 4.4"/>
+            <path d="M7.4 16.4h2.2l.8 2.6"/>
+            <path d="M16.7 16.4h-2.4l-.6 2.6"/>
+          </svg>
+        </span>
+        <div><strong>散步</strong><p>傍晚的时候喜欢去公园走走</p></div>
+      </li>
+    </ul>
+  </section>
+
+  <!-- 页脚 -->
+  <footer class="footer">
+    <p class="footer-invite">和我做对象吧</p>
+    <p class="footer-contact">QQ:2747085548 WeChat:lc200762</p>
+    <p class="footer-copy">我的网站 ©2026 | 这是我的第一个CSS练习作品</p>
+  </footer>
+  <section class="card" id="links" aria-labelledby="links-title">
+    <h2 class="card-title" id="links-title">
+      <svg class="sp" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path d="M12 2.4l2.3 7.3 7.3 2.3-7.3 2.3-2.3 7.3-2.3-7.3-7.3-2.3 7.3-2.3z"/>
+      </svg>
+      我喜欢的部分
+      <svg class="sp" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path d="M12 2.4l2.3 7.3 7.3 2.3-7.3 2.3-2.3 7.3-2.3-7.3-7.3-2.3 7.3-2.3z"/>
+      </svg>
+    </h2>
+    <p class="links-note">移步下面的超链接</p>
+    <ul class="link-list">
+      <li><a href="https://tieba.baidu.com/f?kw=%E5%AD%99%E7%AC%91%E5%B7%9D&fr=personalize_page">我爱看的贴吧</a></li>
+      <li><a href="https://img0.baidu.com/it/u=1662136956,3755529027&fm=253&fmt=auto&app=120&f=JPEG?w=800&h=1169">我讨厌的一张明星歌手的照片</a></li>
+      <li><a href="https://baike.baidu.com/item/%E5%8F%B0%E7%90%83/83132">我喜欢的体育运动</a></li>
+      <li><a href="https://tieba.baidu.com/f?kw=cs2&fr=ala0&tpl=5&dyTabStr=MTIsMCwzLDEsMiwxMyw3LDYsNSw5">我最爱的端游</a></li>
+      <li><a href="https://baike.baidu.com/item/%E4%B8%9C%E5%8C%97%E9%9B%A8%E5%A7%90/63951727">我最喜欢的网红御姐</a></li>
+    </ul>
+  </section>
+</main>
+
+</body>
+</html>
